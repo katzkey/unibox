@@ -5,10 +5,10 @@ export const dynamic = "force-dynamic";
 
 const SERVICES: { service: ServiceType; available: boolean }[] = [
   { service: "gmail", available: true },
-  { service: "slack", available: false },
-  { service: "discord", available: false },
-  { service: "x", available: false },
-  { service: "instagram", available: false },
+  { service: "slack", available: true },
+  { service: "discord", available: true },
+  { service: "x", available: true },
+  { service: "instagram", available: true },
 ];
 
 export default function ConnectPage() {

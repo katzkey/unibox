@@ -11,7 +11,9 @@ export function ConnectButton({
   connected: boolean;
 }) {
   const handleConnect = () => {
-    window.location.href = `/api/connect/${service}`;
+    // X service uses "twitter" as the route name
+    const routeName = service === "x" ? "twitter" : service;
+    window.location.href = `/api/connect/${routeName}`;
   };
 
   return (

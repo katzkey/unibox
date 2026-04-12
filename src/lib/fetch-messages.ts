@@ -1,6 +1,19 @@
 import { prisma } from "@/lib/db";
 import { decrypt, encrypt } from "@/lib/crypto";
 import { fetchGmailMessages, refreshGmailToken } from "@/lib/services/gmail";
+import { fetchSlackMessages, refreshSlackToken } from "@/lib/services/slack";
+import {
+  fetchDiscordMessages,
+  refreshDiscordToken,
+} from "@/lib/services/discord";
+import {
+  fetchTwitterMessages,
+  refreshTwitterToken,
+} from "@/lib/services/twitter";
+import {
+  fetchInstagramMessages,
+  refreshInstagramToken,
+} from "@/lib/services/instagram";
 import type { UnifiedMessage, ServiceType } from "@/types/message";
 
 export async function fetchAndStoreMessages(
@@ -96,6 +109,14 @@ async function fetchServiceMessages(
   switch (service) {
     case "gmail":
       return fetchGmailMessages(accessToken, since);
+    case "slack":
+      return fetchSlackMessages(accessToken, since);
+    case "discord":
+      return fetchDiscordMessages(accessToken, since);
+    case "x":
+      return fetchTwitterMessages(accessToken, since);
+    case "instagram":
+      return fetchInstagramMessages(accessToken, since);
     default:
       console.error(`Service ${service} is not yet supported`);
       return [];
@@ -109,6 +130,14 @@ async function refreshServiceToken(
   switch (service) {
     case "gmail":
       return refreshGmailToken(refreshToken);
+    case "slack":
+      return refreshSlackToken(refreshToken);
+    case "discord":
+      return refreshDiscordToken(refreshToken);
+    case "x":
+      return refreshTwitterToken(refreshToken);
+    case "instagram":
+      return refreshInstagramToken(refreshToken);
     default:
       throw new Error(`Token refresh not supported for ${service}`);
   }
