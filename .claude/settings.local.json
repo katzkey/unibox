@@ -6,7 +6,8 @@
       "Bash(npx prisma:*)",
       "Bash(npx shadcn@latest init -d)",
       "Bash(npx tsc:*)",
-      "Bash(grep -E \"^\\\\.env$|^dev\\\\.db$|^src/generated\" .gitignore)"
+      "Bash(grep -E \"^\\\\.env$|^dev\\\\.db$|^src/generated\" .gitignore)",
+      "Bash(npm run:*)"
     ]
   }
 }
