@@ -12,7 +12,8 @@
       "Bash(npx kill-port:*)",
       "Bash(taskkill //F //IM node.exe)",
       "mcp__Claude_Preview__preview_start",
-      "Bash(taskkill //F //FI \"WINDOWTITLE eq npm\")"
+      "Bash(taskkill //F //FI \"WINDOWTITLE eq npm\")",
+      "Bash(node -e \"console.log\\(require\\('crypto'\\).randomBytes\\(32\\).toString\\('hex'\\)\\)\")"
     ]
   }
 }

@@ -113,9 +113,20 @@ export async function GET(request: NextRequest) {
       },
     });
 
-    return NextResponse.redirect(
+    const redirectResponse = NextResponse.redirect(
       `${process.env.NEXTAUTH_URL}/connect?success=gmail`
     );
+
+    // Store userId in cookie for frontend API calls (temporary until proper auth)
+    redirectResponse.cookies.set("unibox_user_id", userId, {
+      httpOnly: false, // Frontend needs to read this
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 60 * 60 * 24 * 30, // 30 days
+      path: "/",
+    });
+
+    return redirectResponse;
   } catch (error) {
     console.error("Gmail OAuth callback error:", error);
     return NextResponse.json(
