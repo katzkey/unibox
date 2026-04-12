@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
 import { randomBytes } from "crypto";
 
 const DISCORD_AUTH_URL = "https://discord.com/api/oauth2/authorize";
@@ -19,15 +18,6 @@ export async function GET() {
 
     const state = randomBytes(32).toString("hex");
 
-    const cookieStore = await cookies();
-    cookieStore.set("discord_oauth_state", state, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      maxAge: 600,
-      path: "/",
-    });
-
     const params = new URLSearchParams({
       client_id: clientId,
       redirect_uri: redirectUri,
@@ -36,7 +26,19 @@ export async function GET() {
       state,
     });
 
-    return NextResponse.redirect(`${DISCORD_AUTH_URL}?${params.toString()}`);
+    const response = NextResponse.redirect(
+      `${DISCORD_AUTH_URL}?${params.toString()}`
+    );
+
+    response.cookies.set("discord_oauth_state", state, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 600,
+      path: "/",
+    });
+
+    return response;
   } catch (error) {
     console.error("Discord OAuth connect error:", error);
     return NextResponse.json(

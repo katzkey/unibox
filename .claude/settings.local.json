@@ -8,7 +8,11 @@
       "Bash(npx tsc:*)",
       "Bash(grep -E \"^\\\\.env$|^dev\\\\.db$|^src/generated\" .gitignore)",
       "Bash(npm run:*)",
-      "Bash(gh pr create --base main --head feat/phase1-gmail-inbox --title 'Phase 1: Gmail OAuth, message fetching, and inbox UI' --body ':*)"
+      "Bash(gh pr create --base main --head feat/phase1-gmail-inbox --title 'Phase 1: Gmail OAuth, message fetching, and inbox UI' --body ':*)",
+      "Bash(npx kill-port:*)",
+      "Bash(taskkill //F //IM node.exe)",
+      "mcp__Claude_Preview__preview_start",
+      "Bash(taskkill //F //FI \"WINDOWTITLE eq npm\")"
     ]
   }
 }

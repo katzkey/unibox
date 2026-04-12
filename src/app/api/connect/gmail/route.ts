@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
 import { randomBytes } from "crypto";
 
 const GOOGLE_AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth";
@@ -20,18 +19,7 @@ export async function GET() {
       );
     }
 
-    // Generate state for CSRF protection
     const state = randomBytes(32).toString("hex");
-
-    // Store state in a secure, httpOnly cookie
-    const cookieStore = await cookies();
-    cookieStore.set("gmail_oauth_state", state, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      maxAge: 600, // 10 minutes
-      path: "/",
-    });
 
     const params = new URLSearchParams({
       client_id: clientId,
@@ -43,7 +31,19 @@ export async function GET() {
       state,
     });
 
-    return NextResponse.redirect(`${GOOGLE_AUTH_URL}?${params.toString()}`);
+    const response = NextResponse.redirect(
+      `${GOOGLE_AUTH_URL}?${params.toString()}`
+    );
+
+    response.cookies.set("gmail_oauth_state", state, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 600,
+      path: "/",
+    });
+
+    return response;
   } catch (error) {
     console.error("Gmail OAuth connect error:", error);
     return NextResponse.json(

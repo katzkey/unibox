@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
 import { randomBytes } from "crypto";
 
 const SLACK_AUTH_URL = "https://slack.com/oauth/v2/authorize";
@@ -25,15 +24,6 @@ export async function GET() {
 
     const state = randomBytes(32).toString("hex");
 
-    const cookieStore = await cookies();
-    cookieStore.set("slack_oauth_state", state, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      maxAge: 600,
-      path: "/",
-    });
-
     const params = new URLSearchParams({
       client_id: clientId,
       redirect_uri: redirectUri,
@@ -41,7 +31,19 @@ export async function GET() {
       state,
     });
 
-    return NextResponse.redirect(`${SLACK_AUTH_URL}?${params.toString()}`);
+    const response = NextResponse.redirect(
+      `${SLACK_AUTH_URL}?${params.toString()}`
+    );
+
+    response.cookies.set("slack_oauth_state", state, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 600,
+      path: "/",
+    });
+
+    return response;
   } catch (error) {
     console.error("Slack OAuth connect error:", error);
     return NextResponse.json(

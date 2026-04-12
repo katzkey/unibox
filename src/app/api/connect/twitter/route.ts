@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
 import { randomBytes, createHash } from "crypto";
 
 const TWITTER_AUTH_URL = "https://twitter.com/i/oauth2/authorize";
@@ -25,22 +24,6 @@ export async function GET() {
       .update(codeVerifier)
       .digest("base64url");
 
-    const cookieStore = await cookies();
-    cookieStore.set("twitter_oauth_state", state, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      maxAge: 600,
-      path: "/",
-    });
-    cookieStore.set("twitter_code_verifier", codeVerifier, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      maxAge: 600,
-      path: "/",
-    });
-
     const params = new URLSearchParams({
       response_type: "code",
       client_id: clientId,
@@ -51,7 +34,26 @@ export async function GET() {
       code_challenge_method: "S256",
     });
 
-    return NextResponse.redirect(`${TWITTER_AUTH_URL}?${params.toString()}`);
+    const response = NextResponse.redirect(
+      `${TWITTER_AUTH_URL}?${params.toString()}`
+    );
+
+    response.cookies.set("twitter_oauth_state", state, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 600,
+      path: "/",
+    });
+    response.cookies.set("twitter_code_verifier", codeVerifier, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 600,
+      path: "/",
+    });
+
+    return response;
   } catch (error) {
     console.error("Twitter OAuth connect error:", error);
     return NextResponse.json(
