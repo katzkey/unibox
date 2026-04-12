@@ -1,0 +1,35 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model ServiceConnection {
+  id           String   @id @default(uuid())
+  userId       String
+  service      String
+  accessToken  String
+  refreshToken String?
+  expiresAt    DateTime?
+  scopes       String   @default("[]") // JSON array stored as string (SQLite lacks array)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@unique([userId, service])
+}
+
+model Message {
+  id        String   @id @default(uuid())
+  userId    String
+  source    String
+  sourceId  String
+  data      String   // JSON string (SQLite lacks native JSON)
+  isRead    Boolean  @default(false)
+  fetchedAt DateTime @default(now())
+
+  @@unique([userId, source, sourceId])
+  @@index([userId, fetchedAt(sort: Desc)])
+}
