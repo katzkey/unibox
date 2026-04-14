@@ -2,6 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { prisma } from "@/lib/db";
 import { encrypt } from "@/lib/crypto";
+import {
+  USER_ID_COOKIE,
+  generateAppUserId,
+  getUserIdFromRequest,
+} from "@/lib/get-user-id";
 
 const GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token";
 const GOOGLE_USERINFO_URL = "https://www.googleapis.com/oauth2/v2/userinfo";
@@ -84,7 +89,9 @@ export async function GET(request: NextRequest) {
     }
 
     const userInfo = (await userInfoResponse.json()) as { id: string };
-    const userId = userInfo.id;
+    // Use app-level userId (from cookie) to unify connections across services.
+    // Fall back to generating a new one if the cookie is missing.
+    const userId = getUserIdFromRequest(request) ?? generateAppUserId();
 
     // Encrypt tokens and save to DB
     const expiresAt = new Date(Date.now() + tokens.expires_in * 1000);
@@ -118,7 +125,7 @@ export async function GET(request: NextRequest) {
     );
 
     // Store userId in cookie for frontend API calls (temporary until proper auth)
-    redirectResponse.cookies.set("unibox_user_id", userId, {
+    redirectResponse.cookies.set(USER_ID_COOKIE, userId, {
       httpOnly: false, // Frontend needs to read this
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",

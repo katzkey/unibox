@@ -66,22 +66,38 @@ export async function fetchGmailMessages(
     return [];
   }
 
-  // Fetch full message details in parallel (batch of IDs)
-  const messages = await Promise.all(
-    listData.messages.map((msg) => fetchGmailMessage(accessToken, msg.id))
-  );
+  // Fetch message details with bounded concurrency to avoid 429 rate limits.
+  const CONCURRENCY = 5;
+  const ids = listData.messages.map((m) => m.id);
+  const messages: GmailMessage[] = [];
+
+  for (let i = 0; i < ids.length; i += CONCURRENCY) {
+    const batch = ids.slice(i, i + CONCURRENCY);
+    const results = await Promise.all(
+      batch.map((id) => fetchGmailMessage(accessToken, id))
+    );
+    messages.push(...results);
+  }
 
   return messages.map(normalizeGmailMessage);
 }
 
 async function fetchGmailMessage(
   accessToken: string,
-  messageId: string
+  messageId: string,
+  retries = 3
 ): Promise<GmailMessage> {
   const res = await fetch(
     `${GMAIL_API}/messages/${messageId}?format=full`,
     { headers: { Authorization: `Bearer ${accessToken}` } }
   );
+
+  // Retry with exponential backoff on 429 (rate limit) and 5xx.
+  if ((res.status === 429 || res.status >= 500) && retries > 0) {
+    const backoffMs = (4 - retries) * 500 + Math.random() * 300;
+    await new Promise((r) => setTimeout(r, backoffMs));
+    return fetchGmailMessage(accessToken, messageId, retries - 1);
+  }
 
   if (!res.ok) {
     const errorText = await res.text();

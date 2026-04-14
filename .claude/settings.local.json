@@ -14,7 +14,24 @@
       "mcp__Claude_Preview__preview_start",
       "Bash(taskkill //F //FI \"WINDOWTITLE eq npm\")",
       "Bash(node -e \"console.log\\(require\\('crypto'\\).randomBytes\\(32\\).toString\\('hex'\\)\\)\")",
-      "Bash(npx localtunnel:*)"
+      "Bash(npx localtunnel:*)",
+      "Bash(tasklist)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" https://solid-hairs-stop.loca.lt)",
+      "Bash(curl -s -o /dev/null -w \"solid: %{http_code}\\\\n\" -H \"bypass-tunnel-reminder: yes\" https://solid-hairs-stop.loca.lt)",
+      "Bash(curl -s -o /dev/null -w \"bright: %{http_code}\\\\n\" -H \"bypass-tunnel-reminder: yes\" https://bright-bees-boil.loca.lt)",
+      "Bash(ngrok config:*)",
+      "Bash(ngrok http:*)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" https://script-happier-harddisk.ngrok-free.dev)",
+      "Bash(ls prisma/*.db)",
+      "Bash(curl -s -o /dev/null -w \"ngrok: %{http_code}\\\\n\" https://script-happier-harddisk.ngrok-free.dev)",
+      "Bash(curl -s -o /dev/null -w \"local: %{http_code}\\\\n\" http://localhost:3000)",
+      "Bash(node -e ':*)",
+      "Bash(npx tsx -e ':*)",
+      "Bash(curl -s \"http://localhost:3000/api/messages?userId=UASFHH6JK&limit=100\")",
+      "Bash(python -c \"import json,sys; data=json.load\\(sys.stdin\\); from collections import Counter; c=Counter\\(m['source'] for m in data['messages']\\); print\\('source counts:', dict\\(c\\)\\); print\\('total:', len\\(data['messages']\\)\\)\")",
+      "Bash(curl -s \"http://localhost:3000/api/messages?userId=UASFHH6JK&limit=10\")",
+      "Bash(curl -s \"http://localhost:3000/api/messages?userId=UASFHH6JK&service=slack&limit=10\")",
+      "Bash(curl -s \"http://localhost:3000/api/messages?userId=UASFHH6JK&limit=50\")"
     ]
   }
 }

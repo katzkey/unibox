@@ -35,17 +35,17 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const messages = await prisma.message.findMany({
+    // Fetch without pagination yet; we sort in memory by the embedded message
+    // timestamp (not fetchedAt) so that services interleave chronologically.
+    const rows = await prisma.message.findMany({
       where: {
         userId,
         ...(service ? { source: service } : {}),
-        ...(cursor ? { fetchedAt: { lt: new Date(cursor) } } : {}),
       },
       orderBy: { fetchedAt: "desc" },
-      take: Math.min(limit, 100),
     });
 
-    const unified: UnifiedMessage[] = messages.map((msg) => {
+    const allUnified: UnifiedMessage[] = rows.map((msg) => {
       const data = JSON.parse(msg.data) as UnifiedMessage;
       return {
         ...data,
@@ -55,9 +55,21 @@ export async function GET(request: NextRequest) {
       };
     });
 
+    // Sort by real message timestamp, newest first, so Gmail/Slack interleave.
+    allUnified.sort(
+      (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+    );
+
+    // Apply cursor (ISO timestamp of last seen message) and limit.
+    const cursorTime = cursor ? new Date(cursor).getTime() : null;
+    const filtered = cursorTime
+      ? allUnified.filter((m) => new Date(m.timestamp).getTime() < cursorTime)
+      : allUnified;
+    const unified = filtered.slice(0, Math.min(limit, 100));
+
     const nextCursor =
-      messages.length === limit
-        ? messages[messages.length - 1].fetchedAt.toISOString()
+      unified.length === limit
+        ? new Date(unified[unified.length - 1].timestamp).toISOString()
         : null;
 
     return NextResponse.json({ messages: unified, nextCursor }, { status: 200 });

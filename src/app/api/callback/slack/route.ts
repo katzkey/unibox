@@ -2,6 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { prisma } from "@/lib/db";
 import { encrypt } from "@/lib/crypto";
+import {
+  USER_ID_COOKIE,
+  generateAppUserId,
+  getUserIdFromRequest,
+} from "@/lib/get-user-id";
 
 export async function GET(request: NextRequest) {
   try {
@@ -57,11 +62,13 @@ export async function GET(request: NextRequest) {
 
     const tokens = (await tokenRes.json()) as {
       ok: boolean;
-      access_token: string;
-      refresh_token?: string;
-      expires_in?: number;
-      authed_user: { id: string };
-      scope: string;
+      authed_user: {
+        id: string;
+        access_token: string;
+        refresh_token?: string;
+        expires_in?: number;
+        scope: string;
+      };
       error?: string;
     };
 
@@ -73,30 +80,30 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const userId = tokens.authed_user.id;
-    const expiresAt = tokens.expires_in
-      ? new Date(Date.now() + tokens.expires_in * 1000)
+    // Use app-level userId (from cookie) to unify connections across services.
+    const userId = getUserIdFromRequest(request) ?? generateAppUserId();
+    const userAccessToken = tokens.authed_user.access_token;
+    const userRefreshToken = tokens.authed_user.refresh_token;
+    const userScope = tokens.authed_user.scope;
+    const expiresAt = tokens.authed_user.expires_in
+      ? new Date(Date.now() + tokens.authed_user.expires_in * 1000)
       : null;
 
     await prisma.serviceConnection.upsert({
       where: { userId_service: { userId, service: "slack" } },
       update: {
-        accessToken: encrypt(tokens.access_token),
-        refreshToken: tokens.refresh_token
-          ? encrypt(tokens.refresh_token)
-          : undefined,
+        accessToken: encrypt(userAccessToken),
+        refreshToken: userRefreshToken ? encrypt(userRefreshToken) : undefined,
         expiresAt,
-        scopes: JSON.stringify(tokens.scope.split(",")),
+        scopes: JSON.stringify(userScope.split(",")),
       },
       create: {
         userId,
         service: "slack",
-        accessToken: encrypt(tokens.access_token),
-        refreshToken: tokens.refresh_token
-          ? encrypt(tokens.refresh_token)
-          : undefined,
+        accessToken: encrypt(userAccessToken),
+        refreshToken: userRefreshToken ? encrypt(userRefreshToken) : undefined,
         expiresAt,
-        scopes: JSON.stringify(tokens.scope.split(",")),
+        scopes: JSON.stringify(userScope.split(",")),
       },
     });
 
@@ -104,7 +111,7 @@ export async function GET(request: NextRequest) {
       `${process.env.NEXTAUTH_URL}/connect?success=slack`
     );
 
-    redirectResponse.cookies.set("unibox_user_id", userId, {
+    redirectResponse.cookies.set(USER_ID_COOKIE, userId, {
       httpOnly: false,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",

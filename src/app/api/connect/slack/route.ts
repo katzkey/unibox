@@ -1,5 +1,10 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { randomBytes } from "crypto";
+import {
+  USER_ID_COOKIE,
+  generateAppUserId,
+  getUserIdFromRequest,
+} from "@/lib/get-user-id";
 
 const SLACK_AUTH_URL = "https://slack.com/oauth/v2/authorize";
 const SCOPES = [
@@ -10,7 +15,7 @@ const SCOPES = [
   "users:read",
 ].join(",");
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     const clientId = process.env.SLACK_CLIENT_ID;
     const redirectUri = `${process.env.NEXTAUTH_URL}/api/callback/slack`;
@@ -23,11 +28,12 @@ export async function GET() {
     }
 
     const state = randomBytes(32).toString("hex");
+    const appUserId = getUserIdFromRequest(request) ?? generateAppUserId();
 
     const params = new URLSearchParams({
       client_id: clientId,
       redirect_uri: redirectUri,
-      scope: SCOPES,
+      user_scope: SCOPES,
       state,
     });
 
@@ -40,6 +46,14 @@ export async function GET() {
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
       maxAge: 600,
+      path: "/",
+    });
+
+    response.cookies.set(USER_ID_COOKIE, appUserId, {
+      httpOnly: false,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 60 * 60 * 24 * 30,
       path: "/",
     });
 
